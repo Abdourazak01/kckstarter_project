@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kickstarter Success Predictor 🚀</title>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- Particles Background -->
+    <div id="particles-js"></div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <i class="fas fa-rocket"></i>
+                <h1>Kickstarter <span>Predictor</span></h1>
+            </div>
+            <nav class="nav">
+                <a href="#home" class="nav-link active">Accueil</a>
+                <a href="#predictor" class="nav-link">Prédiction</a>
+                <a href="#about" class="nav-link">À Propos</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <div class="container">
+            <div class="hero-content">
+                <h2 class="hero-title">Prédisez le Succès de Votre Projet Kickstarter</h2>
+                <p class="hero-subtitle">Utilisez l'intelligence artificielle pour estimer les chances de réussite de votre campagne de financement participatif</p>
+                <a href="#predictor" class="btn btn-primary">
+                    <i class="fas fa-chart-line"></i> Commencer la Prédiction
+                </a>
+            </div>
+            <div class="hero-stats">
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-brain"></i></div>
+                    <div class="stat-info">
+                        <h3>{{ model_info.model_name if model_info else 'ML Model' }}</h3>
+                        <p>Modèle IA</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-bullseye"></i></div>
+                    <div class="stat-info">
+                        <h3>{{ "%.1f%%"|format(model_info.accuracy * 100) if model_info else 'N/A' }}</h3>
+                        <p>Précision</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-database"></i></div>
+                    <div class="stat-info">
+                        <h3>300K+</h3>
+                        <p>Projets analysés</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Prediction Section -->
+    <section class="prediction-section" id="predictor">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Formulaire de Prédiction</h2>
+                <p class="section-subtitle">Remplissez les informations de votre projet pour obtenir une prédiction</p>
+            </div>
+
+            <div class="prediction-container">
+                <!-- Formulaire -->
+                <div class="form-container">
+                    <!-- ⚠️ IMPORTANT: Pas de method ou action ici! Tout est géré par JavaScript -->
+                    <form id="predictionForm" onsubmit="event.preventDefault(); return false;">
+                        <!-- Informations du Projet -->
+                        <div class="form-section">
+                            <h3 class="form-section-title">
+                                <i class="fas fa-info-circle"></i> Informations du Projet
+                            </h3>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="main_category">
+                                        <i class="fas fa-folder"></i> Catégorie Principale
+                                    </label>
+                                    <select id="main_category" name="main_category" required>
+                                        <option value="">Sélectionnez une catégorie</option>
+                                        {% for category in categories %}
+                                        <option value="{{ category }}">{{ category }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="country">
+                                        <i class="fas fa-globe"></i> Pays
+                                    </label>
+                                    <select id="country" name="country" required>
+                                        <option value="">Sélectionnez un pays</option>
+                                        {% for country in countries %}
+                                        <option value="{{ country }}">{{ country }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="currency">
+                                        <i class="fas fa-dollar-sign"></i> Devise
+                                    </label>
+                                    <select id="currency" name="currency" required>
+                                        <option value="">Sélectionnez une devise</option>
+                                        {% for currency in currencies %}
+                                        <option value="{{ currency }}">{{ currency }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="goal_category">
+                                        <i class="fas fa-tag"></i> Catégorie d'Objectif
+                                    </label>
+                                    <select id="goal_category" name="goal_category" required>
+                                        <option value="">Sélectionnez une catégorie</option>
+                                        {% for goal_cat in goal_categories %}
+                                        <option value="{{ goal_cat }}">{{ goal_cat }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Objectifs Financiers -->
+                        <div class="form-section">
+                            <h3 class="form-section-title">
+                                <i class="fas fa-money-bill-wave"></i> Objectifs Financiers
+                            </h3>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="goal">
+                                        <i class="fas fa-bullseye"></i> Objectif (en devise locale)
+                                    </label>
+                                    <input type="number" id="goal" name="goal" min="1" step="0.01" required placeholder="Ex: 10000">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="usd_goal_real">
+                                        <i class="fas fa-dollar-sign"></i> Objectif en USD
+                                    </label>
+                                    <input type="number" id="usd_goal_real" name="usd_goal_real" min="1" step="0.01" required placeholder="Ex: 10000">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="backers">
+                                    <i class="fas fa-users"></i> Nombre de Contributeurs Estimés
+                                </label>
+                                <input type="number" id="backers" name="backers" min="0" required placeholder="Ex: 150">
+                            </div>
+                        </div>
+
+                        <!-- Calendrier de Campagne -->
+                        <div class="form-section">
+                            <h3 class="form-section-title">
+                                <i class="fas fa-calendar-alt"></i> Calendrier de Campagne
+                            </h3>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="campaign_days">
+                                        <i class="fas fa-hourglass-half"></i> Durée (jours)
+                                    </label>
+                                    <input type="number" id="campaign_days" name="campaign_days" min="1" max="60" required placeholder="Ex: 30">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="launch_year">
+                                        <i class="fas fa-calendar"></i> Année de Lancement
+                                    </label>
+                                    <input type="number" id="launch_year" name="launch_year" min="2009" max="2030" required placeholder="Ex: 2024">
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="launch_month">
+                                        <i class="fas fa-calendar-day"></i> Mois de Lancement
+                                    </label>
+                                    <select id="launch_month" name="launch_month" required>
+                                        <option value="">Sélectionnez un mois</option>
+                                        {% for i in range(1, 13) %}
+                                        <option value="{{ i }}">{{ months[i-1] }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="launch_day">
+                                        <i class="fas fa-calendar-check"></i> Jour du Mois
+                                    </label>
+                                    <input type="number" id="launch_day" name="launch_day" min="1" max="31" required placeholder="Ex: 15">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="launch_weekday">
+                                    <i class="fas fa-calendar-week"></i> Jour de la Semaine
+                                </label>
+                                <select id="launch_weekday" name="launch_weekday" required>
+                                    <option value="">Sélectionnez un jour</option>
+                                    {% for i in range(7) %}
+                                    <option value="{{ i }}">{{ weekdays[i] }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Bouton de Soumission -->
+                        <button type="submit" class="btn btn-submit" id="submitBtn">
+                            <i class="fas fa-magic"></i> Prédire le Succès
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Résultats -->
+                <div class="results-container" id="resultsContainer" style="display: none;">
+                    <div class="result-card">
+                        <div class="result-header">
+                            <h3>Résultat de la Prédiction</h3>
+                            <button class="close-btn" onclick="closeResults()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+
+                        <div class="result-content">
+                            <div class="result-icon" id="resultIcon">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+
+                            <h2 class="result-prediction" id="resultPrediction">-</h2>
+
+                            <div class="probability-container">
+                                <div class="probability-label">Probabilité de Succès</div>
+                                <div class="probability-bar">
+                                    <div class="probability-fill" id="probabilityFill"></div>
+                                </div>
+                                <div class="probability-value" id="probabilityValue">0%</div>
+                            </div>
+
+                            <div class="confidence-badge" id="confidenceBadge">
+                                <i class="fas fa-shield-alt"></i>
+                                <span id="confidenceText">-</span>
+                            </div>
+
+                            <div class="result-tips" id="resultTips">
+                                <!-- Tips will be added dynamically -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section class="about-section" id="about">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">À Propos du Modèle</h2>
+                <p class="section-subtitle">Comment fonctionne notre système de prédiction</p>
+            </div>
+
+            <div class="about-grid">
+                <div class="about-card">
+                    <div class="about-icon">
+                        <i class="fas fa-database"></i>
+                    </div>
+                    <h3>Données Massives</h3>
+                    <p>Notre modèle a été entraîné sur plus de 300 000 projets Kickstarter réels pour garantir des prédictions précises.</p>
+                </div>
+
+                <div class="about-card">
+                    <div class="about-icon">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <h3>IA Avancée</h3>
+                    <p>Utilise des algorithmes de Machine Learning sophistiqués ({{ model_info.model_name if model_info else 'Random Forest, XGBoost' }}) pour analyser vos projets.</p>
+                </div>
+
+                <div class="about-card">
+                    <div class="about-icon">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <h3>Haute Précision</h3>
+                    <p>Avec une précision de {{ "%.1f%%"|format(model_info.accuracy * 100) if model_info else '85%' }}, notre modèle fournit des prédictions fiables pour vos projets.</p>
+                </div>
+
+                <div class="about-card">
+                    <div class="about-icon">
+                        <i class="fas fa-lightbulb"></i>
+                    </div>
+                    <h3>Conseils Personnalisés</h3>
+                    <p>Recevez des recommandations spécifiques pour améliorer vos chances de succès sur Kickstarter.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3><i class="fas fa-rocket"></i> Kickstarter Predictor</h3>
+                    <p>Prédisez le succès de vos projets avec l'IA</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Liens Rapides</h4>
+                    <ul>
+                        <li><a href="#home">Accueil</a></li>
+                        <li><a href="#predictor">Prédiction</a></li>
+                        <li><a href="#about">À Propos</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Contact</h4>
+                    <p><i class="fas fa-envelope"></i> akilouabdourazak@gmail..com</p>
+                    <p><i class="fas fa-phone"></i> +212 601468817</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Kickstarter Predictor. Tous droits réservés.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/form-handler.js') }}"></script>
+
+    <!-- Particles.js -->
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+
+    <!-- Custom JavaScript -->
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
